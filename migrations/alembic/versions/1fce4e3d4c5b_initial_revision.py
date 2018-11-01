@@ -1,8 +1,8 @@
 """initial_revision
 
-Revision ID: 722959bf8ab2
+Revision ID: 1fce4e3d4c5b
 Revises: 
-Create Date: 2018-11-01 17:45:12.229756
+Create Date: 2018-11-01 18:17:20.047711
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '722959bf8ab2'
+revision = '1fce4e3d4c5b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -38,13 +38,6 @@ def upgrade():
     sa.Column('_backend', sa.Enum('none', 'npm', 'maven', 'pypi', 'rubygems', 'scm', 'crates', 'nuget', 'go', name='ecosystem_backend_enum'), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
-    )
-    op.create_table('osio_registered_repos',
-    sa.Column('git_url', sa.Text(), nullable=False),
-    sa.Column('git_sha', sa.String(length=255), nullable=False),
-    sa.Column('email_ids', sa.String(length=255), nullable=False),
-    sa.Column('last_scanned_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('git_url')
     )
     op.create_table('stack_analyses_request',
     sa.Column('id', sa.String(length=64), nullable=False),
@@ -76,26 +69,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['stack_id'], ['stack_analyses_request.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('monitored_upstreams',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('package_id', sa.Integer(), nullable=True),
-    sa.Column('url', sa.String(length=255), nullable=True),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.Column('added_at', sa.DateTime(), nullable=False),
-    sa.Column('deactivated_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['package_id'], ['packages.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_monitored_upstreams_package_id'), 'monitored_upstreams', ['package_id'], unique=False)
-    op.create_table('package_analyses',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('package_id', sa.Integer(), nullable=True),
-    sa.Column('started_at', sa.DateTime(), nullable=True),
-    sa.Column('finished_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['package_id'], ['packages.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_package_analyses_package_id'), 'package_analyses', ['package_id'], unique=False)
     op.create_table('versions',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('package_id', sa.Integer(), nullable=True),
@@ -120,22 +93,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_analyses_version_id'), 'analyses', ['version_id'], unique=False)
-    op.create_table('package_worker_results',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('package_analysis_id', sa.Integer(), nullable=True),
-    sa.Column('worker', sa.String(length=255), nullable=True),
-    sa.Column('worker_id', sa.String(length=64), nullable=True),
-    sa.Column('started_at', sa.DateTime(), nullable=True),
-    sa.Column('ended_at', sa.DateTime(), nullable=True),
-    sa.Column('external_request_id', sa.String(length=64), nullable=True),
-    sa.Column('task_result', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
-    sa.Column('error', sa.Boolean(), nullable=False),
-    sa.ForeignKeyConstraint(['package_analysis_id'], ['package_analyses.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('worker_id')
-    )
-    op.create_index(op.f('ix_package_worker_results_package_analysis_id'), 'package_worker_results', ['package_analysis_id'], unique=False)
-    op.create_index(op.f('ix_package_worker_results_worker'), 'package_worker_results', ['worker'], unique=False)
     op.create_table('worker_results',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('worker', sa.String(length=255), nullable=True),
@@ -162,23 +119,15 @@ def downgrade():
     op.drop_index(op.f('ix_worker_results_external_request_id'), table_name='worker_results')
     op.drop_index(op.f('ix_worker_results_analysis_id'), table_name='worker_results')
     op.drop_table('worker_results')
-    op.drop_index(op.f('ix_package_worker_results_worker'), table_name='package_worker_results')
-    op.drop_index(op.f('ix_package_worker_results_package_analysis_id'), table_name='package_worker_results')
-    op.drop_table('package_worker_results')
     op.drop_index(op.f('ix_analyses_version_id'), table_name='analyses')
     op.drop_table('analyses')
     op.drop_index(op.f('ix_versions_synced2graph'), table_name='versions')
     op.drop_index(op.f('ix_versions_identifier'), table_name='versions')
     op.drop_table('versions')
-    op.drop_index(op.f('ix_package_analyses_package_id'), table_name='package_analyses')
-    op.drop_table('package_analyses')
-    op.drop_index(op.f('ix_monitored_upstreams_package_id'), table_name='monitored_upstreams')
-    op.drop_table('monitored_upstreams')
     op.drop_table('recommendation_feedback')
     op.drop_index(op.f('ix_packages_name'), table_name='packages')
     op.drop_table('packages')
     op.drop_table('stack_analyses_request')
-    op.drop_table('osio_registered_repos')
     op.drop_table('ecosystems')
     op.drop_table('api_requests')
     # ### end Alembic commands ###
